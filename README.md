@@ -57,3 +57,6 @@ NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/<your-commit-hash>.tar
 ## Road map
 1) Настроить `dhcpd` в соответствии с настройками `dhclient` timeweb
 2) Получше организовать генерацию конфигов системы
+
+## Troubleshooting
+- Минимальная конфигурация машины с 1Gb оперативной памяти может быть недостаточна для корректной работы NixOS по причине нехватки памяти. `nixos-rebuild switch` будет заканчиваться ошибкой/пустым output. Конфигурации с 2Gb должно хватить.
