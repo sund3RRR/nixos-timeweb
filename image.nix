@@ -4,7 +4,12 @@
   pkgs,
   modulesPath,
   ...
-}: {
+}: 
+let
+  qemu-ga-wrapped = pkgs.callPackage ./pkgs/ga-wrapped.nix { };
+  setup-timeweb-nixos = pkgs.writeScriptBin "setup-timeweb-nixos" (builtins.readFile ./scripts/setup-timeweb-nixos.sh);
+in 
+{
   # for virtio kernel drivers
   imports = [
     "${toString modulesPath}/profiles/qemu-guest.nix"
@@ -23,31 +28,44 @@
 
   networking.useDHCP = true;
   networking.dhcpcd.persistent = true;
-  networking.dhcpcd.extraConfig = ''
-    option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
-    option dhcp6.next-hop code 242 = ip6-address;
-
-    send host-name = gethostname();
-    request subnet-mask, broadcast-address, time-offset, routers,
-        domain-name, domain-name-servers, domain-search, host-name,
-        dhcp6.name-servers, dhcp6.domain-search, dhcp6.fqdn, dhcp6.sntp-servers,
-        netbios-name-servers, netbios-scope, interface-mtu,
-        rfc3442-classless-static-routes, ntp-servers, dhcp6.next-hop;
-
-    timeout 300;
-  '';
-
-  users.users.root.password = "1234";
 
   services.qemuGuest.enable = true;
+  services.qemuGuest.package = qemu-ga-wrapped;
 
   services.openssh.enable = true;
   services.openssh.openFirewall = true;
+  services.openssh.settings.PermitRootLogin = "yes";
 
-  services.zabbixServer.enable = true;
-  services.zabbixServer.openFirewall = true;
   services.zabbixAgent = {
     enable = true;
-    server = "0.0.0.0";
+    server = "92.53.116.12,92.53.116.111,92.53.116.119,217.18.62.11";
+    settings = {
+      StartAgents = 3;
+      DebugLevel = 3;
+      
+      AllowRoot = 0;
+      User = "zabbix";
+      Timeout = 30;
+      DenyKey = "system.run[*]";
+      
+      UserParameter = "timeweb_config_version,echo 127";
+    };
+    openFirewall = true;
   };
+
+  environment.systemPackages = [
+    setup-timeweb-nixos
+  ];
+
+  environment.etc."nixos/example-configuration.nix" = {
+    mode = "0644";
+    text = (builtins.readFile ./config/configuration.nix);
+  };
+
+  environment.etc."nixos/ga-wrapped.nix" = {
+    mode = "0644";
+    text = (builtins.readFile ./pkgs/ga-wrapped.nix);
+  };
+
+  system.stateVersion = "23.11";
 }
