@@ -2,7 +2,7 @@
 
 stdenv.mkDerivation rec {
   name = "qemu-ga-wrapped";
-  version = "suka";
+  version = "unstable";
 
   src = qemu_full.ga;
 
