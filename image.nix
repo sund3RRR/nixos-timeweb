@@ -67,5 +67,5 @@ in
     text = (builtins.readFile ./pkgs/ga-wrapped.nix);
   };
 
-  system.stateVersion = "23.11";
+  system.stateVersion = "24.11";
 }
